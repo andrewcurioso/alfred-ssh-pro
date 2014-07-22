@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.andrewcurioso.alfred.sshpro</string>
+	<key>category</key>
+	<string>Productivity</string>
+	<key>connections</key>
+	<dict>
+		<key>1A92B31D-1542-401C-A155-402A990657DF</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>26DA2609-8A71-4F58-B9BF-DFD55318CC6D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+		<key>3DC7A4DC-6B5B-4A1A-AE29-D5EA26F85544</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>56638B0A-28AF-4896-8701-FB9AA5903EC3</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>84508E15-DF2C-4362-A796-ECB678C2BF3E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+		<key>4673F378-0408-4F10-8247-7ACE563FE186</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>53F45FDD-115E-4BC2-BC43-FA07AA6012FA</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>Andrew Curioso</string>
+	<key>description</key>
+	<string>SSH that works with standard SSH configuration</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>SSH Pro</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>36</integer>
+				<key>keyword</key>
+				<string>ssh</string>
+				<key>runningsubtext</key>
+				<string>Finding hosts</string>
+				<key>script</key>
+				<string>$query = "{query}";
+include 'prossh.php';</string>
+				<key>title</key>
+				<string>SSH to '{query}'</string>
+				<key>type</key>
+				<integer>1</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>1A92B31D-1542-401C-A155-402A990657DF</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string>ssh {query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.terminalcommand</string>
+			<key>uid</key>
+			<string>26DA2609-8A71-4F58-B9BF-DFD55318CC6D</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string>sftp {query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.terminalcommand</string>
+			<key>uid</key>
+			<string>53F45FDD-115E-4BC2-BC43-FA07AA6012FA</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>36</integer>
+				<key>keyword</key>
+				<string>sftp</string>
+				<key>runningsubtext</key>
+				<string>Finding hosts</string>
+				<key>script</key>
+				<string>$query = "{query}";
+$mode = "SFTP";
+include 'prossh.php';</string>
+				<key>title</key>
+				<string>SFTP to '{query}'</string>
+				<key>type</key>
+				<integer>1</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>4673F378-0408-4F10-8247-7ACE563FE186</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>118</integer>
+				<key>script</key>
+				<string>EDITOR="open"
+QUERY="{query}"
+ALFRED_SSH_PRO_EDITOR=`cat $HOME/.ssh/.alfred-ssh-pro-editor`
+
+if [ -n "$QUERY" ]; then
+  echo $QUERY &gt; $HOME/.ssh/.alfred-ssh-pro-editor
+  ALFRED_SSH_PRO_EDITOR=$QUERY
+fi
+
+if [ ! -d "$HOME/.ssh" ]; then
+  mkdir ~/.ssh
+  chmod 700 ~/.ssh
+fi
+
+if [ ! -d "$HOME/.ssh/config" ]; then
+  touch ~/.ssh/config
+  chmod 600 ~/.ssh/config
+fi
+
+if [ -n "$ALFRED_SSH_PRO_EDITOR" ]; then
+  CLI=`which $ALFRED_SSH_PRO_EDITOR`
+  if [ -n "$CLI" ]; then
+    exit
+  fi
+
+  EDITOR="open -a $ALFRED_SSH_PRO_EDITOR"
+fi
+
+$EDITOR $HOME/.ssh/config</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>56638B0A-28AF-4896-8701-FB9AA5903EC3</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>keyword</key>
+				<string>ssh-config</string>
+				<key>text</key>
+				<string>Configure SSH</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>3DC7A4DC-6B5B-4A1A-AE29-D5EA26F85544</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>applescript</key>
+				<string>on alfred_script(q)
+  -- Get the editor.
+  set editor to do shell script "which `cat $HOME/.ssh/.alfred-ssh-pro-editor`; exit 0"
+
+  -- If the editor command is a CLI command:
+  if editor as string is not equal to "" then
+    set openEditor to editor &amp; " /Users/andrewcurioso/.ssh/config"
+
+    set useIterm to false
+    try
+      do shell script "osascript -e 'exists application \"iTerm\"'"
+      set useIterm to true
+    end try
+
+    if ( useIterm is true) then
+      tell application "iTerm"
+        -- Activate it.
+        activate
+
+        -- make a new terminal
+        set myterm to (make new terminal)
+        tell myterm
+
+          set mysession to (make new session at the end of sessions)
+
+          tell mysession
+            set name to "Edit SSH Config"
+            exec command openEditor
+          end tell
+
+        end tell
+ 
+      end tell
+
+    else
+      tell application "Terminal"
+
+        -- Activate it.
+        activate
+
+        -- Get a window that's not busy.
+        -- If there are no open windows, open one.
+        if count of windows is greater than 0 then
+
+          set found to false
+          repeat with currentWindow in windows
+            if currentWindow is not busy then
+              set targetWindow to currentWindow
+              set found to true
+            end if
+          end repeat
+
+          if found is false then
+            set targetWindow to do script ""
+          end if
+        else
+          set targetWindow to do script ""
+        end if 
+
+        do script openEditor in targetWindow
+
+      end tell
+    end if
+  end if
+end alfred_script</string>
+				<key>cachescript</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.applescript</string>
+			<key>uid</key>
+			<string>84508E15-DF2C-4362-A796-ECB678C2BF3E</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>1A92B31D-1542-401C-A155-402A990657DF</key>
+		<dict>
+			<key>ypos</key>
+			<real>60</real>
+		</dict>
+		<key>26DA2609-8A71-4F58-B9BF-DFD55318CC6D</key>
+		<dict>
+			<key>ypos</key>
+			<real>60</real>
+		</dict>
+		<key>3DC7A4DC-6B5B-4A1A-AE29-D5EA26F85544</key>
+		<dict>
+			<key>ypos</key>
+			<real>300</real>
+		</dict>
+		<key>4673F378-0408-4F10-8247-7ACE563FE186</key>
+		<dict>
+			<key>ypos</key>
+			<real>180</real>
+		</dict>
+		<key>53F45FDD-115E-4BC2-BC43-FA07AA6012FA</key>
+		<dict>
+			<key>ypos</key>
+			<real>180</real>
+		</dict>
+		<key>56638B0A-28AF-4896-8701-FB9AA5903EC3</key>
+		<dict>
+			<key>ypos</key>
+			<real>300</real>
+		</dict>
+		<key>84508E15-DF2C-4362-A796-ECB678C2BF3E</key>
+		<dict>
+			<key>ypos</key>
+			<real>420</real>
+		</dict>
+	</dict>
+	<key>webaddress</key>
+	<string>http://www.andrewcurioso.com/</string>
+</dict>
+</plist>
