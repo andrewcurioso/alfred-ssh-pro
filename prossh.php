@@ -17,14 +17,20 @@ $hosts = array();
 foreach ( $knownHosts as $hostInfo ) {
   if ( preg_match('/^([^\s]+)/',$hostInfo,$m) == 1 ) {
     $a = explode(',',$m[1]);
-    while ( $host = array_shift($a) ) $hosts[] = array('src' => SOURCE_KNOWN, 'val' => $host);
+    while ( $host = array_shift($a) ) $hosts[] = array('src' => SOURCE_KNOWN, 'val' => $host, 'sub' => 'via ~/.ssh/known_hosts');
   }
 }
 
 foreach ( $config as $configLine ) {
-  if ( preg_match('/^Host\s+([^\s]+)$/',$configLine,$m) == 1 ) {
+  if ( preg_match('/^\s*host\s+([^\s]+)$/i',$configLine,$m) == 1 ) {
     $host = preg_replace_callback('/\*(.*)/','replace_config_wildcard',$m[1],1);
-    $hosts[] = array('src' => SOURCE_CONFIG, 'val' => $host);
+    $hosts[] = array('src' => SOURCE_CONFIG, 'val' => $host, 'sub' => 'via ~/.ssh/config');
+
+  } else if ( preg_match('/^\s*hostname\s+([^\s]+)$/i',$configLine,$m) == 1 ) {
+    $i = count($hosts)-1;
+    $host = str_replace('%h', $hosts[$i]['val'], $m[1]);
+    if ( $host != $hosts[$i]['val'] )
+      $hosts[$i]['sub'] = "'$host' {$hosts[$i][sub]}";
   }
 }
 
@@ -37,26 +43,29 @@ $exactMatch = false;
 
 usort($hosts,'sort_hosts');
 
+$c = 0;
 foreach ( $hosts as $host ) {
   if ( strpos($host['val'],$query) !== false ) {
-    item($host['val'],$mode);
+    item($host['val'],$host['sub'],$mode);
     if ( !$exactMatch && $host == $query ) $exactMatch = true;
+    if ( ++$c == 8 ) break;
   }
 }
 
 if ( !$exactMatch )
-  item($query,$mode);
+  item($query,'',$mode);
 
 echo <<<EOF
 </items>
 EOF;
 
-function item($host,$mode) {
+function item($host,$subtitle,$mode) {
   $icon = ICON;
   echo <<<EOF
   <item uid="$host" arg="$host" valid="yes">
     <title>$mode to '$host'</title>
     <icon>$icon</icon>
+    <subtitle>$subtitle</subtitle>
   </item>
 EOF;
 }
