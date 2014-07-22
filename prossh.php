@@ -14,24 +14,44 @@ $config = file("$sshRoot/config");
 $knownHosts = file("$sshRoot/known_hosts");
 
 $hosts = array();
-foreach ( $knownHosts as $hostInfo ) {
+foreach ( $knownHosts as $i => $hostInfo ) {
   if ( preg_match('/^([^\s]+)/',$hostInfo,$m) == 1 ) {
     $a = explode(',',$m[1]);
-    while ( $host = array_shift($a) ) $hosts[] = array('src' => SOURCE_KNOWN, 'val' => $host, 'sub' => 'via ~/.ssh/known_hosts');
+    while ( $host = array_shift($a) ) $hosts[] = array('src' => SOURCE_KNOWN, 'val' => $host, 'sub' => 'via ~/.ssh/known_hosts', 'i' => 'k'.$i, 'neg' => array());
   }
 }
 
-foreach ( $config as $configLine ) {
-  if ( preg_match('/^\s*host\s+([^\s]+)$/i',$configLine,$m) == 1 ) {
-    $host = preg_replace_callback('/\*(.*)/','replace_config_wildcard',$m[1],1);
-    $hosts[] = array('src' => SOURCE_CONFIG, 'val' => $host, 'sub' => 'via ~/.ssh/config');
+foreach ( $config as $i => $configLine ) {
+  if ( preg_match('/^\s*host\s+(.+)\s+$/i',$configLine,$m) == 1 ) {
+    $all = preg_split('/\s+/',preg_replace_callback('/\*(.*)/','replace_config_wildcard',$m[1],1));
+    $neg = array();
+
+    foreach ( $all as $subhost ) {
+      if ( $subhost[0] == '!' ) {
+        $neg[] = substr($subhost,1);
+      } else {
+        $hosts[] = array('src' => SOURCE_CONFIG, 'val' => $subhost, 'sub' => 'via ~/.ssh/config', 'i' => 'c'.$i, 'neg' => array());
+      }
+    }
+
+    if ( count($neg) > 0 ) {
+      $j = count($hosts)-1;
+
+      while ( $hosts[$j]['i'] == 'c'.$i ) {
+        $hosts[$j--]['neg'] = $neg;
+      }
+    }
 
   } else if ( preg_match('/^\s*hostname\s+([^\s]+)$/i',$configLine,$m) == 1 ) {
-    $i = count($hosts)-1;
-    $host = str_replace('%h', $hosts[$i]['val'], $m[1]);
-    if ( $host != $hosts[$i]['val'] )
-      $hosts[$i]['sub'] = "'$host' {$hosts[$i][sub]}";
+    $j = count($hosts)-1;
+
+    do {
+      $host = str_replace('%h', $hosts[$j]['val'], $m[1]);
+      if ( $host != $hosts[$j]['val'] )
+        $hosts[$j]['sub'] = "'$host' {$hosts[$j]['sub']}";
+    } while ( $j > 0 && $hosts[$j]['i'] == $hosts[--$j]['i'] );
   }
+
 }
 
 echo <<<EOF
@@ -95,7 +115,6 @@ function sort_hosts($a, $b) {
   if ( $ai == $bi ) {
     $as = $a['src'];
     $bs = $b['src'];
-
 
     if ( $as == $bs ) {
       $al = strlen($av);
