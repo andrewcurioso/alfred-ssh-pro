@@ -27,9 +27,9 @@ SSH Pro uses standard SSH configuration files to put access to all your remote s
 
 If you have iTerm then the Command Line tools will be opened in that, otherwise they will open in the default system terminal. Regardless of your Alfred settings.
 
-### Licence
+### License
 
-This ALfred Power Pack workflow is licenced under the GPL licence.
+This Alfred Power Pack workflow is licenced under the GPLv3 license.
 
 ### Contributing
 
