@@ -12,7 +12,7 @@ SSH Pro uses standard SSH configuration files to put access to all your remote s
 * Set your favorite editor (GUI or CLI) to edit your SSH configuration in
 * Works with both SSH and SFTP
 
-## Instructions
+### Instructions
 
 `ssh {hostname}` opens a new connection to a remote machine. The hostname can be autocompleted based on your existing SSH configuration, no additional configuration necessary.
 
@@ -26,3 +26,11 @@ SSH Pro uses standard SSH configuration files to put access to all your remote s
 * `ssh-config TextWrangler`
 
 If you have iTerm then the Command Line tools will be opened in that, otherwise they will open in the default system terminal. Regardless of your Alfred settings.
+
+### Licence
+
+This ALfred Power Pack workflow is licenced under the GPL licence.
+
+### Contributing
+
+If you would like to contribute to SSH Pro please use the Github issue tracker to submit bugs, feature requests, and patches.
