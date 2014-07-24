@@ -73,7 +73,7 @@
 				<string>Finding hosts</string>
 				<key>script</key>
 				<string>$query = "{query}";
-include 'prossh.php';</string>
+include 'sshpro.php';</string>
 				<key>title</key>
 				<string>SSH to '{query}'</string>
 				<key>type</key>
@@ -132,7 +132,7 @@ include 'prossh.php';</string>
 				<key>script</key>
 				<string>$query = "{query}";
 $mode = "SFTP";
-include 'prossh.php';</string>
+include 'sshpro.php';</string>
 				<key>title</key>
 				<string>SFTP to '{query}'</string>
 				<key>type</key>
@@ -292,7 +292,7 @@ end alfred_script</string>
 		</dict>
 	</array>
 	<key>readme</key>
-	<string></string>
+	<string>See: https://github.com/andrewcurioso/alfred-ssh-pro</string>
 	<key>uidata</key>
 	<dict>
 		<key>1A92B31D-1542-401C-A155-402A990657DF</key>
