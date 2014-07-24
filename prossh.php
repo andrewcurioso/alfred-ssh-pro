@@ -1,11 +1,14 @@
 <?php
-define('ICON','icon.png');
+include('lib/Host.php');
 
-define('SOURCE_KNOWN', 0);
-define('SOURCE_CONFIG', 1);
+class Workflow {
+  public static $mode;
+}
 
 if ( !isset($query) ) $query = @$argv[1];
 if ( !isset($mode) ) $mode = "SSH";
+
+Workflow::$mode = $mode;
 
 $home = getenv('HOME');
 $sshRoot = "$home/.ssh/";
@@ -17,39 +20,36 @@ $hosts = array();
 foreach ( $knownHosts as $i => $hostInfo ) {
   if ( preg_match('/^([^\s]+)/',$hostInfo,$m) == 1 ) {
     $a = explode(',',$m[1]);
-    while ( $host = array_shift($a) ) $hosts[] = array('src' => SOURCE_KNOWN, 'val' => $host, 'sub' => 'via ~/.ssh/known_hosts', 'i' => 'k'.$i, 'neg' => array());
+    while ( $host = array_shift($a) )
+      $hosts[] = new Host($host, Host::SOURCE_KNOWN, "k$i", 'via ~/.ssh/known_hosts');
   }
 }
 
 foreach ( $config as $i => $configLine ) {
   if ( preg_match('/^\s*host\s+(.+)\s+$/i',$configLine,$m) == 1 ) {
-    $all = preg_split('/\s+/',preg_replace_callback('/\*(.*)/','replace_config_wildcard',$m[1],1));
+    $all = preg_split('/\s+/',$m[1]);
     $neg = array();
 
     foreach ( $all as $subhost ) {
       if ( $subhost[0] == '!' ) {
         $neg[] = substr($subhost,1);
       } else {
-        $hosts[] = array('src' => SOURCE_CONFIG, 'val' => $subhost, 'sub' => 'via ~/.ssh/config', 'i' => 'c'.$i, 'neg' => array());
+        $host = new Host($subhost, Host::SOURCE_CONFIG, "c$i", 'via ~/.ssh/config');
+        $host->replaceWildcard($query);
+        $hosts[] = $host;
       }
     }
 
     if ( count($neg) > 0 ) {
       $j = count($hosts)-1;
 
-      while ( $hosts[$j]['i'] == 'c'.$i ) {
-        $hosts[$j--]['neg'] = $neg;
-      }
     }
 
   } else if ( preg_match('/^\s*hostname\s+([^\s]+)$/i',$configLine,$m) == 1 ) {
     $j = count($hosts)-1;
+    $key = $hosts[$j]->getKey();
 
-    do {
-      $host = str_replace('%h', $hosts[$j]['val'], $m[1]);
-      if ( $host != $hosts[$j]['val'] )
-        $hosts[$j]['sub'] = "'$host' {$hosts[$j]['sub']}";
-    } while ( $j > 0 && $hosts[$j]['i'] == $hosts[--$j]['i'] );
+    while ( $j > 0 && $hosts[$j]->updateHostnameIf($m[1], $query, $key) ) { $j--; }
   }
 
 }
@@ -59,72 +59,29 @@ echo <<<EOF
 <items>
 EOF;
 
-$exactMatch = false;
-
 usort($hosts,'sort_hosts');
+
+/* This value is updated by ref in $host->match() */
+$exactMatch = false;
 
 $c = 0;
 foreach ( $hosts as $host ) {
-  if ( strpos($host['val'],$query) !== false ) {
-    item($host['val'],$host['sub'],$mode);
-    if ( !$exactMatch && $host == $query ) $exactMatch = true;
+  if ( $host->matches($query, $exactMatch) ) {
+    echo $host->toXml();
     if ( ++$c == 8 ) break;
   }
 }
 
-if ( !$exactMatch )
-  item($query,'',$mode);
+if ( !$exactMatch ) {
+  $wildcard = new Host($query);
+  echo $wildcard->toXml();
+}
 
 echo <<<EOF
 </items>
 EOF;
 
-function item($host,$subtitle,$mode) {
-  $icon = ICON;
-  echo <<<EOF
-  <item uid="$host" arg="$host" valid="yes">
-    <title>$mode to '$host'</title>
-    <icon>$icon</icon>
-    <subtitle>$subtitle</subtitle>
-  </item>
-EOF;
-}
-
-function replace_config_wildcard($matches) {
-  global $query;
-  $ins = $query;  
-  for ( $i=strlen($query); $i > 0; $i-- ) {
-    if ( substr($query,-$i) == substr($matches[1],0,$i) ) {
-      $ins = substr($ins,0,-$i);
-      break;
-    }
-  }
-
-  return $ins.$matches[1];
-}
-
 function sort_hosts($a, $b) {
   global $query;
-
-  $av = $a['val'];
-  $bv = $b['val'];
-
-  $ai = strpos($av,$query);
-  $bi = strpos($bv,$query);
-
-  if ( $ai == $bi ) {
-    $as = $a['src'];
-    $bs = $b['src'];
-
-    if ( $as == $bs ) {
-      $al = strlen($av);
-      $bl = strlen($bv);
-
-      if ( $al == $bl ) return 0;
-      else return ($al < $bl) ? -1 : 1;
-    }
-    else return ($as < $bs) ? -1 : 1;
-  } else {
-    return ($ai < $bi) ? -1 : 1;
-  }
+  return $a->cmp($b,$query);
 }
